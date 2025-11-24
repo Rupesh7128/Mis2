@@ -30,7 +30,7 @@ const getEnv = (key: string) => {
   return undefined;
 };
 
-const GOOGLE_API_KEY = getEnv('API_KEY');
+const GOOGLE_API_KEY = getEnv('API_KEY') || getEnv('GEMINI_API_KEY');
 const OPENAI_API_KEY = getEnv('OPENAI_API_KEY');
 
 const GOOGLE_MODEL = "gemini-2.5-flash";
@@ -42,9 +42,12 @@ let ai: GoogleGenAI | null = null;
 if (GOOGLE_API_KEY) {
   try {
     ai = new GoogleGenAI({ apiKey: GOOGLE_API_KEY });
+    console.log("✅ Gemini AI initialized successfully");
   } catch (e) {
-    console.warn("Failed to initialize Google AI client");
+    console.warn("Failed to initialize Google AI client:", e);
   }
+} else {
+  console.error("❌ GEMINI API KEY NOT FOUND. Please set VITE_API_KEY or VITE_GEMINI_API_KEY in environment variables.");
 }
 
 // --- OPENAI FALLBACK HANDLER ---
@@ -124,7 +127,9 @@ export const analyzeResume = async (
 
   // 1. Try Primary AI (Google)
   try {
-    if (!ai) throw new Error("Primary AI not configured");
+    if (!ai || !GOOGLE_API_KEY) {
+      throw new Error("⚠️ API Configuration Missing: Please add VITE_API_KEY or VITE_GEMINI_API_KEY to your environment variables. Get your key at: https://aistudio.google.com/apikey");
+    }
 
     const response = await ai.models.generateContent({
       model: GOOGLE_MODEL,
@@ -149,11 +154,16 @@ export const analyzeResume = async (
       return JSON.parse(response.text) as AnalysisResult;
     }
     throw new Error("No response text from Primary AI");
-  } catch (primaryError) {
-    console.warn("Primary AI failed, attempting fallback...", primaryError);
+  } catch (primaryError: any) {
+    console.error("Primary AI failed:", primaryError);
+    
+    // If it's a configuration error, throw it directly
+    if (primaryError.message?.includes("API Configuration Missing")) {
+      throw primaryError;
+    }
     
     // 2. Fallback to Secondary AI (OpenAI)
-    throw new Error("Primary AI overloaded. Please try again in a moment.");
+    throw new Error("AI Service temporarily unavailable. Please check your API key configuration or try again in a moment.");
   }
 };
 
@@ -277,7 +287,9 @@ export const generateContent = async (
 
   // 1. Try Primary AI (Google)
   try {
-    if (!ai) throw new Error("Primary AI not configured");
+    if (!ai || !GOOGLE_API_KEY) {
+      throw new Error("⚠️ API Configuration Missing: Please add VITE_API_KEY or VITE_GEMINI_API_KEY to your environment variables. Get your key at: https://aistudio.google.com/apikey");
+    }
 
     const response = await ai.models.generateContent({
       model: GOOGLE_MODEL,
@@ -294,8 +306,13 @@ export const generateContent = async (
       },
     });
     return response.text || "Failed to generate content.";
-  } catch (primaryError) {
-    console.warn("Primary AI failed, switching to Secondary Neural Net...", primaryError);
+  } catch (primaryError: any) {
+    console.error("Primary AI failed:", primaryError);
+    
+    // If it's a configuration error, throw it directly
+    if (primaryError.message?.includes("API Configuration Missing")) {
+      throw primaryError;
+    }
     
     // 2. Fallback to Secondary AI (OpenAI)
     try {
