@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Environment Variable Test</title>
+</head>
+<body>
+    <h1>Environment Variable Test</h1>
+    <div id="result"></div>
+    
+    <script type="module">
+        // Test if environment variables are accessible
+        const result = document.getElementById('result');
+        
+        let html = '<h2>Checking Environment Variables:</h2><ul>';
+        
+        // Check import.meta.env (Vite way)
+        if (typeof import.meta !== 'undefined' && import.meta.env) {
+            html += '<li>✅ import.meta.env exists</li>';
+            html += '<li>VITE_API_KEY: ' + (import.meta.env.VITE_API_KEY ? '✅ SET (length: ' + import.meta.env.VITE_API_KEY.length + ')' : '❌ NOT SET') + '</li>';
+            html += '<li>VITE_GEMINI_API_KEY: ' + (import.meta.env.VITE_GEMINI_API_KEY ? '✅ SET (length: ' + import.meta.env.VITE_GEMINI_API_KEY.length + ')' : '❌ NOT SET') + '</li>';
+        } else {
+            html += '<li>❌ import.meta.env NOT available</li>';
+        }
+        
+        // Check process.env (defined in vite.config)
+        try {
+            if (typeof process !== 'undefined' && process.env) {
+                html += '<li>✅ process.env exists</li>';
+                html += '<li>process.env.API_KEY: ' + (process.env.API_KEY ? '✅ SET' : '❌ NOT SET') + '</li>';
+                html += '<li>process.env.GEMINI_API_KEY: ' + (process.env.GEMINI_API_KEY ? '✅ SET' : '❌ NOT SET') + '</li>';
+            }
+        } catch (e) {
+            html += '<li>❌ process.env NOT available: ' + e.message + '</li>';
+        }
+        
+        html += '</ul>';
+        result.innerHTML = html;
+    </script>
+</body>
+</html>
