@@ -2,36 +2,9 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { AnalysisResult, FileData, GeneratorType } from "../types";
 
 // --- CONFIGURATION ---
-// ROBUST ENV GETTER: Fixes "Black Screen" / ReferenceError on Vercel/Vite
-const getEnv = (key: string) => {
-  // 1. Try Vite / Modern Browser Environment (import.meta.env)
-  try {
-    // @ts-ignore
-    if (typeof import.meta !== 'undefined' && import.meta.env) {
-      // @ts-ignore
-      const val = import.meta.env[`VITE_${key}`] || import.meta.env[key];
-      if (val) return val;
-    }
-  } catch (e) {
-    // Ignore
-  }
-
-  // 2. Try Standard Node/Process Environment (CRA/Next.js)
-  try {
-    // @ts-ignore
-    if (typeof process !== 'undefined' && process.env) {
-      // @ts-ignore
-      return process.env[key];
-    }
-  } catch (e) {
-    // Ignore ReferenceError if process is not defined
-  }
-
-  return undefined;
-};
-
-const GOOGLE_API_KEY = getEnv('API_KEY') || getEnv('GEMINI_API_KEY');
-const OPENAI_API_KEY = getEnv('OPENAI_API_KEY');
+// Direct access to environment variables (Vite replaces these at build time)
+const GOOGLE_API_KEY = import.meta.env.VITE_API_KEY || import.meta.env.VITE_GEMINI_API_KEY;
+const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 
 const GOOGLE_MODEL = "gemini-2.5-flash";
 const OPENAI_MODEL = "gpt-4o";
